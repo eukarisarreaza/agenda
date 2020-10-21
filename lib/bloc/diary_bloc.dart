@@ -4,7 +4,12 @@
 import 'dart:async';
 
 import 'package:agenda/data/model/cancha.dart';
+import 'package:agenda/data/model/diary.dart';
 import 'package:agenda/data/repository/cancha_repository.dart';
+import 'package:agenda/data/repository/diary_repository.dart';
+import 'package:agenda/services/api.dart';
+import 'package:agenda/services/response/weather_response.dart';
+import 'package:agenda/utils/location_helper.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DiaryBloc {
@@ -21,6 +26,10 @@ class DiaryBloc {
   Stream<List<Cancha>> get canchasListStream => _canchasStreamController.stream;
 
 
+  final _weatherStreamController = StreamController<WeatherResponse>.broadcast();
+  Stream<WeatherResponse> get weatherStream => _weatherStreamController.stream;
+
+
   Future<void> actualizarListadoCanchas() async {
     _canchasStreamController.add(await CanchaRepository().canchas());
   }
@@ -30,8 +39,22 @@ class DiaryBloc {
   }
 
 
+  void actualizarClima() async {
+    var _apiProvider = Api();
+    var helper= LocationHelper();
+    final weather= await _apiProvider.weatherForLatLon(helper.latitude.toString(), helper.longitude.toString());
+    _weatherStreamController.sink.add(weather);
+  }
+
+
   void dispose(){
     _canchasStreamController?.close();
+    _weatherStreamController?.close();
+  }
+
+  Future<int> registrarCita(Cancha canchaSelected, String selectedDate, String userName) async {
+    return await DiaryRepository().newDiary(Diary.internal(fecha: selectedDate,
+        idCancha: canchaSelected.id, userName: userName));
   }
 
 

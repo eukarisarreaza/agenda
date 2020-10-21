@@ -1,9 +1,12 @@
 import 'package:agenda/bloc/diary_bloc.dart';
 import 'package:agenda/bloc/provider_bloc.dart';
 import 'package:agenda/data/model/cancha.dart';
+import 'package:agenda/data/model/diary.dart';
 import 'package:agenda/page/widget_pronostico.dart';
+import 'package:agenda/services/response/weather_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 
 class NewDiaryPage extends StatefulWidget {
@@ -15,9 +18,12 @@ class NewDiaryPage extends StatefulWidget {
 
 class _NewDiaryPageState extends State<NewDiaryPage> {
   final TextEditingController _typeCanchaController = TextEditingController();
-  var _canchaSelected;
+  Cancha canchaSelected;
   DateTime selectedDate = DateTime.now();
   DiaryBloc bloc;
+  String userName;
+  final _formKey = GlobalKey<FormState>();
+
 
   @override
   void initState() {
@@ -28,29 +34,62 @@ class _NewDiaryPageState extends State<NewDiaryPage> {
   @override
   Widget build(BuildContext context) {
     bloc= ProviderBloc.diaryBloc(context);
-
+    bloc.actualizarClima();
 
     return Scaffold(
       appBar: AppBar(title: Text('Formulario de Registro de Citas'),),
 
       body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-          child: Column(
-            children: [
-              seleccionFecha(),
-              SizedBox(height: 20,),
-              pronosticoTiempo(),
-              SizedBox(height: 20,),
-              spinnerCanchas(),
-              SizedBox(height: 30,),
-              btnRegistrar()
-            ],
+        child: Form(
+          key: _formKey,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+            child: Column(
+              children: [
+                _createInputUserName(),
+                SizedBox(height: 20,),
+                seleccionFecha(),
+                SizedBox(height: 20,),
+                pronosticoTiempo(),
+                SizedBox(height: 20,),
+                spinnerCanchas(),
+                SizedBox(height: 30,),
+                btnRegistrar()
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  Widget _createInputUserName() {
+    return TextFormField(
+      autofocus: true,
+      initialValue: "",
+      textCapitalization: TextCapitalization.sentences,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Ingrese un dato valido';
+        } else
+          return null;
+      },
+      onSaved: (value) {
+        userName = value;
+      },
+      decoration: InputDecoration(
+          labelText: 'Nombre de Usuario *',
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15.0),
+            borderSide: BorderSide(color: Colors.black),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0))
+      ),
+      onFieldSubmitted: (v) {
+      },
+    );
+  }
+
 
   Widget seleccionFecha() {
     return GestureDetector(
@@ -123,9 +162,9 @@ class _NewDiaryPageState extends State<NewDiaryPage> {
       },
 
       onSuggestionSelected: (Cancha suggestion) {
-        _canchaSelected= suggestion;
+        canchaSelected= suggestion;
         //_brand = suggestion;
-        //_typeMarcaController.text = suggestion.name;
+        _typeCanchaController.text = 'Cancha ${suggestion.name}';
       },
 
     );
@@ -189,20 +228,64 @@ class _NewDiaryPageState extends State<NewDiaryPage> {
   }
 
   Widget pronosticoTiempo() {
-    return Card(
-      elevation: 1,
-      color: Colors.blue,
-      child: Pronostico(),
+    return StreamBuilder<WeatherResponse>(
+      stream: bloc.weatherStream,
+      builder: (context, snapshot) {
+        if(snapshot.hasData){
+          return Card(
+            elevation: 1,
+            color: Colors.blue,
+            child: Pronostico(weather: snapshot.data),
+          );
+        }else
+          return CircularProgressIndicator();
+      }
     );
-
-
   }
 
   Widget btnRegistrar() {
     return RaisedButton(
         textColor: Colors.white,
         color: Colors.blue,
-        onPressed: () {},
+        onPressed: () {
+      if(_formKey.currentState.validate() ){
+        if(canchaSelected==null){
+          Fluttertoast.showToast(
+              msg: "Seleccione una Cancha",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.blue,
+              textColor: Colors.white,
+              fontSize: 16.0
+          );
+        }else
+        bloc.registrarCita(canchaSelected, "${selectedDate.toLocal()}".split(' ')[0], userName).then((value) {
+          if(value!=null){
+            Fluttertoast.showToast(
+                msg: "Cita registrada exitosamente!! ",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.blue,
+                textColor: Colors.white,
+                fontSize: 16.0
+            );
+            Navigator.pop(context);
+          }else
+            Fluttertoast.showToast(
+                msg: "Imposible registrar una cita a esta cancha",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0
+            );
+        });
+      }
+
+        },
         child: Text('Crear Cita')
     );
   }

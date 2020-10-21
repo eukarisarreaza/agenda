@@ -8,12 +8,14 @@ import 'package:floor/floor.dart';
   ]
 )
 class Diary {
-  @primaryKey
+  @PrimaryKey(autoGenerate: true)
   final int id;
   final String fecha;
   @ColumnInfo(name: 'id_cancha')
   final int idCancha;
-  final int userName;
+  final String userName;
 
   Diary(this.id, this.fecha, this.idCancha, this.userName);
+  Diary.internal({this.id, this.fecha, this.idCancha, this.userName});
+
 }

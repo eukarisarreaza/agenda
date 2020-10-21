@@ -24,7 +24,7 @@ class Api {
     }));
   }
 
-  Future<WeatherResponse> brands() async {
+  Future<WeatherResponse> weatherForCity() async {
 
     try {
       Response response = await _dio.get('/weather?q=$city,uk&appid=$api_key');
@@ -40,6 +40,22 @@ class Api {
     }
   }
 
+
+  Future<WeatherResponse> weatherForLatLon(String lat, String long) async {
+
+    try {
+      Response response = await _dio.get('/weather?lat=$lat&lon=$long&appid=$api_key');
+      print(response);
+      return WeatherResponse.fromJson(response.data);
+
+    } on DioError catch (error) {
+      print('Dio Error: $error');
+      return null;
+    } catch (error) {
+      print('Catch Error: $error');
+      return null;
+    }
+  }
 
 
 

@@ -7,8 +7,11 @@ abstract class DiaryDao {
   Future<List<Diary>> findAll();
 
   @Query('SELECT * FROM Diary WHERE id = :id')
-  Stream<Diary> findById(int id);
+  Future<Diary> findById(int id);
+
+  @Query('SELECT * FROM Diary WHERE id_cancha = :idCancha AND fecha = :fecha')
+  Future<List<Diary>> findByDate(int idCancha, String fecha);
 
   @insert
-  Future<void> insertDiary(Diary diary);
+  Future<int> insertDiary(Diary diary);
 }

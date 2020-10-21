@@ -3,6 +3,7 @@ import 'package:agenda/bloc/provider_bloc.dart';
 import 'package:agenda/data/model/cancha.dart';
 import 'package:agenda/page/new_diary.dart';
 import 'package:agenda/page/widget_pronostico.dart';
+import 'package:agenda/utils/location_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -10,12 +11,32 @@ import 'package:flutter/widgets.dart';
 class HomePage extends StatelessWidget {
   static final String routeName= 'home';
   DiaryBloc bloc;
+  var helper= LocationHelper();
+
+
+
+  Future<void> initGps() async {
+    var helper= LocationHelper();
+
+    if(! await helper.locationGranted()){
+      await helper.requestPermission();
+    }
+
+    if( ! await helper.serviceEnable()) {
+      await helper.requestServicioEnable();
+    }
+
+    if(await helper.locationGranted() && await helper.serviceEnable()) {
+      helper.initService();
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     bloc= ProviderBloc.diaryBloc(context);
     bloc.actualizarListadoCanchas();
-
+    initGps();
 
     return Scaffold(
       /*appBar: AppBar(
@@ -78,7 +99,7 @@ class HomePage extends StatelessWidget {
                       )
                   ),
 
-                  child: Pronostico(),
+                    child: Container(),
                 ),
 
 

@@ -84,7 +84,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Cancha` (`id` INTEGER, `name` TEXT, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Diary` (`id` INTEGER, `fecha` TEXT, `id_cancha` INTEGER, `userName` INTEGER, FOREIGN KEY (`id_cancha`) REFERENCES `Cancha` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `Diary` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `fecha` TEXT, `id_cancha` INTEGER, `userName` TEXT, FOREIGN KEY (`id_cancha`) REFERENCES `Cancha` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -119,15 +119,13 @@ class _$CanchaDao extends CanchaDao {
 
   final QueryAdapter _queryAdapter;
 
-  static final _canchaMapper = (Map<String, dynamic> row) =>
-      Cancha(row['id'] as int, row['name'] as String);
-
   final InsertionAdapter<Cancha> _canchaInsertionAdapter;
 
   @override
   Future<List<Cancha>> findAll() async {
     return _queryAdapter.queryList('SELECT * FROM Cancha',
-        mapper: _canchaMapper);
+        mapper: (Map<String, dynamic> row) =>
+            Cancha(row['id'] as int, row['name'] as String));
   }
 
   @override
@@ -136,7 +134,8 @@ class _$CanchaDao extends CanchaDao {
         arguments: <dynamic>[id],
         queryableName: 'Cancha',
         isView: false,
-        mapper: _canchaMapper);
+        mapper: (Map<String, dynamic> row) =>
+            Cancha(row['id'] as int, row['name'] as String));
   }
 
   @override
@@ -153,7 +152,7 @@ class _$CanchaDao extends CanchaDao {
 
 class _$DiaryDao extends DiaryDao {
   _$DiaryDao(this.database, this.changeListener)
-      : _queryAdapter = QueryAdapter(database, changeListener),
+      : _queryAdapter = QueryAdapter(database),
         _diaryInsertionAdapter = InsertionAdapter(
             database,
             'Diary',
@@ -162,8 +161,7 @@ class _$DiaryDao extends DiaryDao {
                   'fecha': item.fecha,
                   'id_cancha': item.idCancha,
                   'userName': item.userName
-                },
-            changeListener);
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -171,30 +169,44 @@ class _$DiaryDao extends DiaryDao {
 
   final QueryAdapter _queryAdapter;
 
-  static final _diaryMapper = (Map<String, dynamic> row) => Diary(
-      row['id'] as int,
-      row['fecha'] as String,
-      row['id_cancha'] as int,
-      row['userName'] as int);
-
   final InsertionAdapter<Diary> _diaryInsertionAdapter;
 
   @override
   Future<List<Diary>> findAll() async {
-    return _queryAdapter.queryList('SELECT * FROM Diary', mapper: _diaryMapper);
+    return _queryAdapter.queryList('SELECT * FROM Diary',
+        mapper: (Map<String, dynamic> row) => Diary(
+            row['id'] as int,
+            row['fecha'] as String,
+            row['id_cancha'] as int,
+            row['userName'] as String));
   }
 
   @override
-  Stream<Diary> findById(int id) {
-    return _queryAdapter.queryStream('SELECT * FROM Diary WHERE id = ?',
+  Future<Diary> findById(int id) async {
+    return _queryAdapter.query('SELECT * FROM Diary WHERE id = ?',
         arguments: <dynamic>[id],
-        queryableName: 'Diary',
-        isView: false,
-        mapper: _diaryMapper);
+        mapper: (Map<String, dynamic> row) => Diary(
+            row['id'] as int,
+            row['fecha'] as String,
+            row['id_cancha'] as int,
+            row['userName'] as String));
   }
 
   @override
-  Future<void> insertDiary(Diary diary) async {
-    await _diaryInsertionAdapter.insert(diary, OnConflictStrategy.abort);
+  Future<List<Diary>> findByDate(int idCancha, String fecha) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM Diary WHERE id_cancha = ? AND fecha = ?',
+        arguments: <dynamic>[idCancha, fecha],
+        mapper: (Map<String, dynamic> row) => Diary(
+            row['id'] as int,
+            row['fecha'] as String,
+            row['id_cancha'] as int,
+            row['userName'] as String));
+  }
+
+  @override
+  Future<int> insertDiary(Diary diary) {
+    return _diaryInsertionAdapter.insertAndReturnId(
+        diary, OnConflictStrategy.abort);
   }
 }
