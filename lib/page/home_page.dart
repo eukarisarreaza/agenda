@@ -10,12 +10,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   static final String routeName= 'home';
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   DiaryBloc bloc;
+
   var helper= LocationHelper();
-
-
 
   Future<void> initGps() async {
     var helper= LocationHelper();
@@ -33,18 +38,23 @@ class HomePage extends StatelessWidget {
     }
   }
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initGps();
+  }
 
   @override
   Widget build(BuildContext context) {
     bloc= ProviderBloc.diaryBloc(context);
     bloc.actualizarClima();
     bloc.listDiary();
-    initGps();
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: Icon(Icons.menu, color: Colors.white), onPressed: null),
-        title: Text('Listado de Citas', textAlign: TextAlign.center), centerTitle: true,
+        title: Text('Listado de Agendamientos', textAlign: TextAlign.center), centerTitle: true,
       ),
       body: body(context),
       floatingActionButton: FloatingActionButton(
@@ -101,7 +111,6 @@ class HomePage extends StatelessWidget {
 
   }
 
-
   Widget pronosticoTiempo() {
     return StreamBuilder<WeatherResponse>(
         stream: bloc.weatherStream,
@@ -113,7 +122,7 @@ class HomePage extends StatelessWidget {
               child: Pronostico(weather: snapshot.data),
             );
           }else
-            return CircularProgressIndicator();
+            return Container();
         }
     );
   }
@@ -167,6 +176,36 @@ class HomePage extends StatelessWidget {
 
   void deleteDiary(Diary cita) {
 
-    bloc.eliminarCita(cita);
+    showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+          return AlertDialog(
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+            title: Text('Eliminar Agendamiento', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue), textAlign: TextAlign.center,),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text('¿Esta seguro que desea eliminar este agendamiento?'),
+              ],
+            ),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: ()=> Navigator.pop(context),
+                child: Text('Cancelar'),
+              ),
+
+              FlatButton(
+                onPressed: (){
+                  bloc.eliminarCita(cita);
+                  Navigator.pop(context);
+                },
+                child: Text('Aceptar'),
+              ),
+            ],
+          );
+        });
+
   }
 }
