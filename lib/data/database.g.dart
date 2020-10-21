@@ -105,13 +105,12 @@ class _$AppDatabase extends AppDatabase {
 
 class _$CanchaDao extends CanchaDao {
   _$CanchaDao(this.database, this.changeListener)
-      : _queryAdapter = QueryAdapter(database, changeListener),
+      : _queryAdapter = QueryAdapter(database),
         _canchaInsertionAdapter = InsertionAdapter(
             database,
             'Cancha',
             (Cancha item) =>
-                <String, dynamic>{'id': item.id, 'name': item.name},
-            changeListener);
+                <String, dynamic>{'id': item.id, 'name': item.name});
 
   final sqflite.DatabaseExecutor database;
 
@@ -129,11 +128,9 @@ class _$CanchaDao extends CanchaDao {
   }
 
   @override
-  Stream<Cancha> findById(int id) {
-    return _queryAdapter.queryStream('SELECT * FROM Cancha WHERE id = ?',
+  Future<Cancha> findById(int id) async {
+    return _queryAdapter.query('SELECT * FROM Cancha WHERE id = ?',
         arguments: <dynamic>[id],
-        queryableName: 'Cancha',
-        isView: false,
         mapper: (Map<String, dynamic> row) =>
             Cancha(row['id'] as int, row['name'] as String));
   }
@@ -161,6 +158,16 @@ class _$DiaryDao extends DiaryDao {
                   'fecha': item.fecha,
                   'id_cancha': item.idCancha,
                   'userName': item.userName
+                }),
+        _diaryDeletionAdapter = DeletionAdapter(
+            database,
+            'Diary',
+            ['id'],
+            (Diary item) => <String, dynamic>{
+                  'id': item.id,
+                  'fecha': item.fecha,
+                  'id_cancha': item.idCancha,
+                  'userName': item.userName
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -170,6 +177,8 @@ class _$DiaryDao extends DiaryDao {
   final QueryAdapter _queryAdapter;
 
   final InsertionAdapter<Diary> _diaryInsertionAdapter;
+
+  final DeletionAdapter<Diary> _diaryDeletionAdapter;
 
   @override
   Future<List<Diary>> findAll() async {
@@ -208,5 +217,10 @@ class _$DiaryDao extends DiaryDao {
   Future<int> insertDiary(Diary diary) {
     return _diaryInsertionAdapter.insertAndReturnId(
         diary, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> deleteDiary(Diary diary) {
+    return _diaryDeletionAdapter.deleteAndReturnChangedRows(diary);
   }
 }

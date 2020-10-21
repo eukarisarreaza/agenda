@@ -22,7 +22,7 @@ class WeatherResponse {
   String base;
   Main main;
   int visibility;
-  Wind wind;
+  dynamic wind;
   Clouds clouds;
   int dt;
   Sys sys;
@@ -37,7 +37,7 @@ class WeatherResponse {
     base: json["base"],
     main: Main.fromJson(json["main"]),
     visibility: json["visibility"],
-    wind: Wind.fromJson(json["wind"]),
+    wind: json["wind"],
     clouds: Clouds.fromJson(json["clouds"]),
     dt: json["dt"],
     sys: Sys.fromJson(json["sys"]),
@@ -90,8 +90,8 @@ class Coord {
   double lat;
 
   factory Coord.fromJson(Map<String, dynamic> json) => Coord(
-    lon: json["lon"].toDouble(),
-    lat: json["lat"].toDouble(),
+    lon: json["lon"]!=null ? json["lon"].toDouble() : 0,
+    lat: json["lat"]!=null ? json["lat"].toDouble() : 0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -118,10 +118,10 @@ class Main {
   int humidity;
 
   factory Main.fromJson(Map<String, dynamic> json) => Main(
-    temp: json["temp"].toDouble(),
-    feelsLike: json["feels_like"].toDouble(),
-    tempMin: json["temp_min"].toDouble(),
-    tempMax: json["temp_max"].toDouble(),
+    temp: json["temp"]!=null ? json["temp"].toDouble() : 0,
+    feelsLike: json["feels_like"]!=null ? json["feels_like"].toDouble() : 0,
+    tempMin: json["temp_min"]!=null ? json["temp_min"].toDouble() : 0,
+    tempMax: json["temp_max"]!=null ? json["temp_max"].toDouble() : 0,
     pressure: json["pressure"],
     humidity: json["humidity"],
   );
@@ -196,7 +196,7 @@ class Weather {
   };
 }
 
-class Wind {
+/*class Wind {
   Wind({
     this.speed,
     this.deg,
@@ -218,4 +218,4 @@ class Wind {
     "deg": deg,
     "gust": gust,
   };
-}
+}*/

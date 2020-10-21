@@ -7,7 +7,7 @@ abstract class CanchaDao {
   Future<List<Cancha>> findAll();
 
   @Query('SELECT * FROM Cancha WHERE id = :id')
-  Stream<Cancha> findById(int id);
+  Future<Cancha> findById(int id);
 
   @insert
   Future<void> insertCancha(Cancha canchas);

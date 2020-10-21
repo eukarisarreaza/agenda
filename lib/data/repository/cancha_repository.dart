@@ -18,6 +18,11 @@ class CanchaRepository{
   CanchaRepository._internal();
 
 
+  Future<Cancha> getCancha(int id) async {
+    final database = await $FloorAppDatabase.databaseBuilder(AppDatabase.databaseName).build();
+    return await database.canchaDao.findById(id);
+  }
+
   Future<List<Cancha>> canchas() async {
     final database = await $FloorAppDatabase.databaseBuilder(AppDatabase.databaseName).build();
     List<Cancha> list=  await database.canchaDao.findAll();

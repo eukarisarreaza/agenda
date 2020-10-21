@@ -14,4 +14,7 @@ abstract class DiaryDao {
 
   @insert
   Future<int> insertDiary(Diary diary);
+
+  @delete
+  Future<int> deleteDiary(Diary diary);
 }

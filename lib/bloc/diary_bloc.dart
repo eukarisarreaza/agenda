@@ -26,6 +26,10 @@ class DiaryBloc {
   Stream<List<Cancha>> get canchasListStream => _canchasStreamController.stream;
 
 
+  final _diaryStreamController = StreamController<List<Diary>>();
+  Stream<List<Diary>> get diaryListStream => _diaryStreamController.stream;
+
+
   final _weatherStreamController = StreamController<WeatherResponse>.broadcast();
   Stream<WeatherResponse> get weatherStream => _weatherStreamController.stream;
 
@@ -39,6 +43,12 @@ class DiaryBloc {
   }
 
 
+  void listDiary() async  {
+    var lista= await DiaryRepository().diaryList();
+    lista.sort((a, b){ return b.id.compareTo(a.id);});
+    _diaryStreamController.sink.add(lista);
+  }
+
   void actualizarClima() async {
     var _apiProvider = Api();
     var helper= LocationHelper();
@@ -47,16 +57,30 @@ class DiaryBloc {
   }
 
 
+  Future<WeatherResponse> actualizarClimaAsync() async {
+    var _apiProvider = Api();
+    var helper= LocationHelper();
+    return await _apiProvider.weatherForLatLon(helper.latitude.toString(), helper.longitude.toString());
+  }
+
+
   void dispose(){
     _canchasStreamController?.close();
     _weatherStreamController?.close();
+    _diaryStreamController?.close();
   }
 
   Future<int> registrarCita(Cancha canchaSelected, String selectedDate, String userName) async {
-    return await DiaryRepository().newDiary(Diary.internal(fecha: selectedDate,
-        idCancha: canchaSelected.id, userName: userName));
+    int id=  await DiaryRepository().newDiary(Diary.internal(fecha: selectedDate, idCancha: canchaSelected.id, userName: userName));
+    listDiary();
+    return id;
   }
 
+
+  Future<void> eliminarCita(Diary cita) async {
+    await DiaryRepository().deleteDiary(cita);
+    listDiary();
+  }
 
 
 

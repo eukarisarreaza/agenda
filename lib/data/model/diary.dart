@@ -1,4 +1,5 @@
 import 'package:agenda/data/model/cancha.dart';
+import 'package:agenda/data/repository/cancha_repository.dart';
 import 'package:floor/floor.dart';
 
 
@@ -18,4 +19,8 @@ class Diary {
   Diary(this.id, this.fecha, this.idCancha, this.userName);
   Diary.internal({this.id, this.fecha, this.idCancha, this.userName});
 
+
+  Future<Cancha> getCancha() async {
+    return await CanchaRepository().getCancha(idCancha);
+  }
 }

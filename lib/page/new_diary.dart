@@ -249,6 +249,8 @@ class _NewDiaryPageState extends State<NewDiaryPage> {
         color: Colors.blue,
         onPressed: () {
       if(_formKey.currentState.validate() ){
+        _formKey.currentState.save();
+
         if(canchaSelected==null){
           Fluttertoast.showToast(
               msg: "Seleccione una Cancha",

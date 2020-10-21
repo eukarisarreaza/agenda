@@ -31,6 +31,12 @@ class DiaryRepository{
       return null;
   }
 
+  Future<void> deleteDiary(Diary cita) async {
+    final database = await $FloorAppDatabase.databaseBuilder(AppDatabase.databaseName).build();
+    await database.diaryDao.deleteDiary(cita);
+    diaryList();
+  }
+
 
 
 
